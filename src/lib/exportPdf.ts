@@ -6,6 +6,24 @@ import { point01ToPdf, rect01ToPdf } from './coords';
 import { wrapTextWithEllipsis } from './textWrap';
 import type { FieldDef, FieldValues } from './schema';
 
+const drawCheckMark = (page: any, x: number, y: number, w: number, h: number) => {
+  const x1 = x + w * 0.22;
+  const y1 = y + h * 0.52;
+  const x2 = x + w * 0.42;
+  const y2 = y + h * 0.3;
+  const x3 = x + w * 0.8;
+  const y3 = y + h * 0.76;
+
+  const thickness = Math.max(1, Math.min(2.2, h * 0.1));
+  page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness });
+  page.drawLine({ start: { x: x2, y: y2 }, end: { x: x3, y: y3 }, thickness });
+};
+
+const drawTextBold = (page: any, text: string, opts: any) => {
+  page.drawText(text, opts);
+  page.drawText(text, { ...opts, x: opts.x + 0.35 });
+};
+
 const renderPageToPngBytes = async (page: any, scale = 2.2): Promise<Uint8Array> => {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -59,22 +77,19 @@ export const exportPdf = async (
       const value = session.values[field.id];
       if (field.type === 'checkbox') {
         if (value === true) {
-          const rect = rect01ToPdf(field.rect, pageW, pageH);
-          const checkSize = Math.max(9, Math.min(rect.height, rect.width) * 0.95);
-          pdfPage.drawText('✓', {
-            x: rect.x + 1,
-            y: rect.y + Math.max(0, (rect.height - checkSize) / 2),
-            size: checkSize,
-            font,
-            color: rgb(0, 0, 0)
-          });
+          const x = field.rect.x * pageW;
+          const yTop = field.rect.y * pageH;
+          const w = field.rect.w * pageW;
+          const h = field.rect.h * pageH;
+          const y = pageH - yTop - h;
+          drawCheckMark(pdfPage, x, y, w, h);
         }
         return;
       }
       if (field.type === 'slider') {
         if (typeof value === 'number' && field.valueAnchor) {
           const p = point01ToPdf(field.valueAnchor, pageW, pageH);
-          pdfPage.drawText(String(value), { x: p.x, y: p.y, size: field.fontSize ?? 10, font, color: rgb(0, 0, 0) });
+          drawTextBold(pdfPage, String(value), { x: p.x, y: p.y, size: field.fontSize ?? 10, font, color: rgb(0, 0, 0) });
         }
         return;
       }
@@ -87,7 +102,7 @@ export const exportPdf = async (
         const blockHeightPt = lines.length * lineHeightPt;
         let y = rect.y + Math.max(0, (rect.height - blockHeightPt) / 2) + blockHeightPt - lineHeightPt + fontSizePt * 0.1;
         lines.forEach((line) => {
-          pdfPage.drawText(line, { x: rect.x + paddingPt, y, size: fontSizePt, font, color: rgb(0, 0, 0) });
+          drawTextBold(pdfPage, line, { x: rect.x + paddingPt, y, size: fontSizePt, font, color: rgb(0, 0, 0) });
           y -= lineHeightPt;
         });
       }
