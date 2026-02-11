@@ -148,7 +148,7 @@
         "h": 0.013849458346138065
       },
       "fontSize": 10,
-      "fontSizePt": 8,
+      "fontSizePt": 6.5,
       "maxLines": 4,
       "hitPadding": 10
     },
@@ -163,7 +163,7 @@
         "h": 0.01796686488147641
       },
       "fontSize": 10,
-      "fontSizePt": 11,
+      "fontSizePt": 8,
       "maxLines": 4,
       "hitPadding": 10
     },
@@ -178,7 +178,7 @@
         "h": 0.016095316456322617
       },
       "fontSize": 10,
-      "fontSizePt": 11,
+      "fontSizePt": 8,
       "maxLines": 4,
       "hitPadding": 10
     },
@@ -193,7 +193,7 @@
         "h": 0.09544896968284342
       },
       "fontSize": 10,
-      "fontSizePt": 6,
+      "fontSizePt": 5,
       "maxLines": 4,
       "hitPadding": 10
     }
