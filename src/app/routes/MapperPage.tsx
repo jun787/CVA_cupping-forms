@@ -11,7 +11,10 @@ import { defaultFieldsFile } from '../../lib/schema';
 const makeFieldId = (page: number, type: FieldType, fields: FieldDef[]) => {
   const used = fields
     .filter((f) => f.page === page && f.type === type)
-    .map((f) => Number(f.id.split('_').at(-1)) || 0);
+    .map((f) => {
+      const parts = f.id.split('_');
+      return Number(parts[parts.length - 1]) || 0;
+    });
   const next = (Math.max(0, ...used) + 1).toString().padStart(3, '0');
   return `p${page}_${type}_${next}`;
 };
@@ -106,7 +109,7 @@ export function MapperPage() {
 
   const addField = (rect: Rect01, fieldType: FieldType) => {
     const id = makeFieldId(page, fieldType, fieldsFile.fields);
-    const template = selected ? fieldsFile.fields.find((f) => f.id === selected) : fieldsFile.fields.at(-1);
+    const template = selected ? fieldsFile.fields.find((f) => f.id === selected) : fieldsFile.fields[fieldsFile.fields.length - 1];
     const field: FieldDef = {
       id,
       page,

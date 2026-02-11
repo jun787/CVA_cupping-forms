@@ -10,6 +10,9 @@ import { checkAssets } from '../../lib/assets';
 
 const pageNames: Record<number, string> = { 1: '綜合', 2: '描述性', 3: '情感性', 4: '外在', 5: '物理性' };
 
+const toArrayBuffer = (u8: Uint8Array) =>
+  u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+
 export function FormPage() {
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [fieldsFile, setFieldsFile] = useState<FieldsFile>(defaultFieldsFile);
@@ -54,7 +57,7 @@ export function FormPage() {
       window.alert('目前沒有已填寫欄位，無可匯出頁面。');
       return;
     }
-    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const blob = new Blob([toArrayBuffer(bytes)], { type: 'application/pdf' });
     const file = new File([blob], `cva-${currentSession.title}.pdf`, { type: 'application/pdf' });
     if ((navigator as Navigator & { share?: (data: ShareData) => Promise<void> }).share) {
       try {
