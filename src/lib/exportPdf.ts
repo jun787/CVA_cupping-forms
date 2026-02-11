@@ -6,6 +6,18 @@ import { point01ToPdf, rect01ToPdf } from './coords';
 import { wrapTextWithEllipsis } from './textWrap';
 import type { FieldDef, FieldValues } from './schema';
 
+const drawTextBold = (
+  page: any,
+  text: string,
+  x: number,
+  y: number,
+  options: { size: number; font: any; color: ReturnType<typeof rgb> }
+) => {
+  page.drawText(text, { x, y, ...options });
+  page.drawText(text, { x: x + 0.35, y, ...options });
+};
+
+
 const renderPageToPngBytes = async (page: any, scale = 2.2): Promise<Uint8Array> => {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -60,10 +72,13 @@ export const exportPdf = async (
       if (field.type === 'checkbox') {
         if (value === true) {
           const rect = rect01ToPdf(field.rect, pageW, pageH);
-          const checkSize = Math.max(9, Math.min(rect.height, rect.width) * 0.95);
+          const checkSize = Math.min(rect.height * 0.9, 18);
+          const checkWidth = font.widthOfTextAtSize('✓', checkSize);
+          const cx = rect.x + rect.width / 2;
+          const cy = rect.y + rect.height / 2;
           pdfPage.drawText('✓', {
-            x: rect.x + 1,
-            y: rect.y + Math.max(0, (rect.height - checkSize) / 2),
+            x: cx - checkWidth / 2,
+            y: cy - checkSize / 2 + checkSize * 0.1,
             size: checkSize,
             font,
             color: rgb(0, 0, 0)
@@ -87,7 +102,7 @@ export const exportPdf = async (
         const blockHeightPt = lines.length * lineHeightPt;
         let y = rect.y + Math.max(0, (rect.height - blockHeightPt) / 2) + blockHeightPt - lineHeightPt + fontSizePt * 0.1;
         lines.forEach((line) => {
-          pdfPage.drawText(line, { x: rect.x + paddingPt, y, size: fontSizePt, font, color: rgb(0, 0, 0) });
+          drawTextBold(pdfPage, line, rect.x + paddingPt, y, { size: fontSizePt, font, color: rgb(0, 0, 0) });
           y -= lineHeightPt;
         });
       }

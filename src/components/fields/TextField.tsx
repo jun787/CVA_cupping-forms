@@ -33,6 +33,7 @@ export function TextField({ fieldId, style, value, fontSizePx, maxLines = 4, onC
         fontSize: fontSizePx,
         lineHeight: `${lineHeightPx}px`,
         textAlign: 'left',
+        fontWeight: 700,
         paddingTop,
         paddingBottom: 2,
         paddingLeft: 4,
