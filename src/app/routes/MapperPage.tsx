@@ -29,10 +29,10 @@ export function MapperPage() {
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [anchorMode, setAnchorMode] = useState(false);
-  const [gridRows, setGridRows] = useState(3);
-  const [gridCols, setGridCols] = useState(3);
-  const [spacingX, setSpacingX] = useState(0.03);
-  const [spacingY, setSpacingY] = useState(0.03);
+  const [gridRows, setGridRows] = useState(1);
+  const [gridCols, setGridCols] = useState(4);
+  const [spacingX, setSpacingX] = useState(24);
+  const [spacingY, setSpacingY] = useState(24);
   const layerRef = useRef<HTMLDivElement>(null);
   const boxRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -53,6 +53,17 @@ export function MapperPage() {
   }, []);
 
   const pageFields = useMemo(() => fieldsFile.fields.filter((f) => f.page === page), [fieldsFile.fields, page]);
+  const selectedField = useMemo(() => fieldsFile.fields.find((f) => f.id === selected), [fieldsFile.fields, selected]);
+  const showGridPanel = type === 'checkbox' || selectedField?.type === 'checkbox';
+
+  const deleteSelectedField = useCallback(() => {
+    if (!selected) return;
+    const target = fieldsFile.fields.find((f) => f.id === selected);
+    if (!target) return;
+    if (!window.confirm(`確定刪除欄位 ${target.id} 嗎？`)) return;
+    setFieldsFile((prev) => ({ ...prev, fields: prev.fields.filter((f) => f.id !== selected) }));
+    setSelected(null);
+  }, [fieldsFile.fields, selected]);
 
   const updateRect = useCallback((id: string, rect: Rect01) => {
     setFieldsFile((prev) => ({ ...prev, fields: prev.fields.map((f) => (f.id === id ? { ...f, rect } : f)) }));
@@ -83,6 +94,7 @@ export function MapperPage() {
           }
         })
         .resizable({
+          margin: 12,
           edges: { left: true, right: true, top: true, bottom: true },
           listeners: {
             move: (event) => {
@@ -159,7 +171,9 @@ export function MapperPage() {
 
   const addGrid = () => {
     const base = fieldsFile.fields.find((f) => f.id === selected && f.type === 'checkbox');
-    if (!base) return;
+    if (!base || viewport.width === 0 || viewport.height === 0) return;
+    const spacingX01 = spacingX / viewport.width;
+    const spacingY01 = spacingY / viewport.height;
     const next: FieldDef[] = [];
     for (let r = 0; r < gridRows; r++) {
       for (let c = 0; c < gridCols; c++) {
@@ -169,8 +183,8 @@ export function MapperPage() {
           id: makeFieldId(page, 'checkbox', [...fieldsFile.fields, ...next]),
           rect: {
             ...base.rect,
-            x: base.rect.x + c * spacingX,
-            y: base.rect.y + r * spacingY
+            x: base.rect.x + c * spacingX01,
+            y: base.rect.y + r * spacingY01
           }
         });
       }
@@ -188,6 +202,22 @@ export function MapperPage() {
     URL.revokeObjectURL(url);
   };
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!selected) return;
+      if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) return;
+      event.preventDefault();
+      deleteSelectedField();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [deleteSelectedField, selected]);
+
   return (
     <div className="app-shell">
       <div className="topbar">
@@ -204,11 +234,19 @@ export function MapperPage() {
           if (!file) return;
           setFieldsFile(JSON.parse(await file.text()) as FieldsFile);
         }} /></label>
-        <label>rows <input type="number" min={1} value={gridRows} onChange={(e) => setGridRows(Number(e.target.value) || 1)} /></label>
-        <label>cols <input type="number" min={1} value={gridCols} onChange={(e) => setGridCols(Number(e.target.value) || 1)} /></label>
-        <label>spacingX <input type="number" step="0.005" value={spacingX} onChange={(e) => setSpacingX(Number(e.target.value) || 0)} /></label>
-        <label>spacingY <input type="number" step="0.005" value={spacingY} onChange={(e) => setSpacingY(Number(e.target.value) || 0)} /></label>
-        <button onClick={addGrid} disabled={!fieldsFile.fields.find((f) => f.id === selected && f.type === 'checkbox')}>Checkbox Grid</button>
+        {showGridPanel && (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <strong>批量產生（Grid）</strong>
+            <span style={{ fontSize: 12, color: '#374151' }}>用來一次產生多個 checkbox（例如一排 4 格）。</span>
+            <span style={{ fontSize: 12, color: '#374151' }}>以目前選取 checkbox 為左上角基準；間距單位為 px。</span>
+            <label>列(rows) <input type="number" min={1} placeholder="例:1" value={gridRows} onChange={(e) => setGridRows(Number(e.target.value) || 1)} /></label>
+            <label>欄(cols) <input type="number" min={1} placeholder="例:4" value={gridCols} onChange={(e) => setGridCols(Number(e.target.value) || 1)} /></label>
+            <label>水平間距 spacingX(px) <input type="number" min={0} step="1" placeholder="例:24" value={spacingX} onChange={(e) => setSpacingX(Number(e.target.value) || 0)} /></label>
+            <label>垂直間距 spacingY(px) <input type="number" min={0} step="1" placeholder="例:24" value={spacingY} onChange={(e) => setSpacingY(Number(e.target.value) || 0)} /></label>
+            <button onClick={addGrid} disabled={selectedField?.type !== 'checkbox'}>Generate</button>
+          </div>
+        )}
+        <button onClick={deleteSelectedField} disabled={!selectedField}>Delete</button>
         <button onClick={() => setAnchorMode(true)} disabled={!fieldsFile.fields.find((f) => f.id === selected && f.type === 'slider')}>設定 Slider Anchor</button>
         <Link to="/">回表單</Link>
       </div>
@@ -242,14 +280,19 @@ export function MapperPage() {
                     top: px.top,
                     width: px.width,
                     height: px.height,
-                    outline: selected === field.id ? '2px solid #ef4444' : undefined
+                    outline: selected === field.id ? '2px solid #ef4444' : undefined,
+                    zIndex: selected === field.id ? 2 : 1
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelected(field.id);
                   }}
                 >
-                  {preview ? field.type : field.id}
+                  {selected === field.id && (
+                    <span style={{ fontSize: 10, pointerEvents: 'none', background: 'rgba(255,255,255,0.9)', padding: '0 2px' }}>
+                      {preview ? field.type : field.id}
+                    </span>
+                  )}
                   {field.type === 'slider' && field.valueAnchor && (
                     <span style={{ position: 'absolute', left: `${field.valueAnchor.x * 100}%`, top: `${field.valueAnchor.y * 100}%` }}>•</span>
                   )}
