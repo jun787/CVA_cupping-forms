@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "defaults": {
+    "textFontSize": 10,
+    "textMaxLines": 4,
+    "checkboxHitPadding": 10,
+    "sliderFontSize": 10
+  },
+  "fields": []
+}
