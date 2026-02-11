@@ -36,7 +36,8 @@ export function TextField({ fieldId, style, value, fontSizePx, maxLines = 4, onC
         paddingTop,
         paddingBottom: 2,
         paddingLeft: 4,
-        paddingRight: 2
+        paddingRight: 2,
+        fontWeight: 700
       }}
       value={draft}
       onCompositionStart={() => {
