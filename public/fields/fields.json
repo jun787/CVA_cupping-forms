@@ -20,7 +20,7 @@
       "fontSize": 10,
       "maxLines": 4,
       "hitPadding": 10,
-      "fontSizePt": 18
+      "fontSizePt": 13
     },
     {
       "id": "p2_text_003",
@@ -35,7 +35,7 @@
       "fontSize": 10,
       "maxLines": 4,
       "hitPadding": 10,
-      "fontSizePt": 18
+      "fontSizePt": 13
     },
     {
       "id": "p2_text_004",
@@ -50,7 +50,7 @@
       "fontSize": 10,
       "maxLines": 4,
       "hitPadding": 10,
-      "fontSizePt": 16
+      "fontSizePt": 12
     },
     {
       "id": "p2_text_005",
@@ -65,7 +65,7 @@
       "fontSize": 10,
       "maxLines": 4,
       "hitPadding": 10,
-      "fontSizePt": 18
+      "fontSizePt": 13
     },
     {
       "id": "p2_checkbox_001",
@@ -134,7 +134,22 @@
         "h": 0.022429744555113533
       },
       "fontSize": 10,
-      "fontSizePt": 18,
+      "fontSizePt": 13,
+      "maxLines": 4,
+      "hitPadding": 10
+    },
+    {
+      "id": "p2_text_007",
+      "page": 2,
+      "type": "text",
+      "rect": {
+        "x": 0.6616314199395771,
+        "y": 0.1644847934041659,
+        "w": 0.2824773413897281,
+        "h": 0.09612747666477228
+      },
+      "fontSize": 10,
+      "fontSizePt": 12,
       "maxLines": 4,
       "hitPadding": 10
     }
