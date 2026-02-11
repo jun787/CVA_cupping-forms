@@ -11,7 +11,7 @@ import { checkAssets } from '../../lib/assets';
 const pageNames: Record<number, string> = { 1: '綜合', 2: '描述性', 3: '情感性', 4: '外在', 5: '物理性' };
 
 const toArrayBuffer = (u8: Uint8Array) =>
-  u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
+  u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
 
 export function FormPage() {
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
