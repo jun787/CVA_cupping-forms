@@ -7,7 +7,7 @@ import { SliderField } from './fields/SliderField';
 type Props = {
   fields: FieldDef[];
   page: number;
-  viewport: { width: number; height: number };
+  viewport: { width: number; height: number; cssScale?: number };
   values: FieldValues;
   onUpdate: (fieldId: string, value: string | boolean | number | null) => void;
 };
@@ -34,7 +34,9 @@ export function FieldLayer({ fields, page, viewport, values, onUpdate }: Props) 
         if (field.type === 'slider') {
           return <SliderField key={field.id} style={baseStyle} value={typeof value === 'number' ? value : null} onChange={(v) => onUpdate(field.id, v)} />;
         }
-        return <TextField key={field.id} style={baseStyle} value={typeof value === 'string' ? value : ''} onChange={(v) => onUpdate(field.id, v)} />;
+        const fontSizePt = field.fontSizePt ?? field.fontSize ?? 10;
+        const fontSizePx = fontSizePt * (viewport.cssScale ?? 1);
+        return <TextField key={field.id} style={baseStyle} fontSizePx={fontSizePx} value={typeof value === 'string' ? value : ''} onChange={(v) => onUpdate(field.id, v)} />;
       })}
     </div>
   );

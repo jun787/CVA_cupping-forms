@@ -20,10 +20,11 @@ const makeFieldId = (page: number, type: FieldType, fields: FieldDef[]) => {
 };
 
 export function MapperPage() {
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [viewport, setViewport] = useState({ width: 0, height: 0, cssScale: 1 });
   const [fieldsFile, setFieldsFile] = useState<FieldsFile>(defaultFieldsFile);
   const [page, setPage] = useState(2);
   const [type, setType] = useState<FieldType>('text');
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(() => localStorage.getItem('mapperToolbarCollapsed') === '1');
   const [preview, setPreview] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
@@ -55,6 +56,7 @@ export function MapperPage() {
   const pageFields = useMemo(() => fieldsFile.fields.filter((f) => f.page === page), [fieldsFile.fields, page]);
   const selectedField = useMemo(() => fieldsFile.fields.find((f) => f.id === selected), [fieldsFile.fields, selected]);
   const showGridPanel = type === 'checkbox' || selectedField?.type === 'checkbox';
+  const selectedTextField = selectedField?.type === 'text' ? selectedField : null;
 
   const deleteSelectedField = useCallback(() => {
     if (!selected) return;
@@ -128,6 +130,7 @@ export function MapperPage() {
       type: fieldType,
       rect,
       fontSize: template?.fontSize ?? 10,
+      fontSizePt: fieldType === 'text' ? (template?.fontSizePt ?? template?.fontSize ?? 10) : undefined,
       maxLines: template?.maxLines ?? 4,
       hitPadding: template?.hitPadding ?? 10,
       valueAnchor: fieldType === 'slider' ? template?.valueAnchor : undefined
@@ -219,8 +222,14 @@ export function MapperPage() {
   }, [deleteSelectedField, selected]);
 
   return (
-    <div className="app-shell">
-      <div className="topbar">
+    <div className="app-shell page-shell">
+      <div className={`topbar ${toolbarCollapsed ? 'collapsed' : ''}`}>
+        <button onClick={() => {
+          const next = !toolbarCollapsed;
+          setToolbarCollapsed(next);
+          localStorage.setItem('mapperToolbarCollapsed', next ? '1' : '0');
+        }}>{toolbarCollapsed ? '▾' : '▴'}</button>
+        {!toolbarCollapsed && (<>
         <select value={page} onChange={(e) => setPage(Number(e.target.value))}>{[1, 2, 3, 4, 5].map((p) => <option key={p} value={p}>頁 {p}</option>)}</select>
         <select value={type} onChange={(e) => setType(e.target.value as FieldType)}>
           <option value="text">text</option>
@@ -234,6 +243,24 @@ export function MapperPage() {
           if (!file) return;
           setFieldsFile(JSON.parse(await file.text()) as FieldsFile);
         }} /></label>
+        {selectedTextField && (
+          <label>Font Size (pt)
+            <input
+              type="number"
+              min={6}
+              max={18}
+              step={0.5}
+              value={selectedTextField.fontSizePt ?? selectedTextField.fontSize ?? 10}
+              onChange={(e) => {
+                const next = Number(e.target.value) || 10;
+                setFieldsFile((prev) => ({
+                  ...prev,
+                  fields: prev.fields.map((f) => (f.id === selectedTextField.id ? { ...f, fontSizePt: Math.max(6, Math.min(18, next)) } : f))
+                }));
+              }}
+            />
+          </label>
+        )}
         {showGridPanel && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <strong>批量產生（Grid）</strong>
@@ -249,13 +276,14 @@ export function MapperPage() {
         <button onClick={deleteSelectedField} disabled={!selectedField}>Delete</button>
         <button onClick={() => setAnchorMode(true)} disabled={!fieldsFile.fields.find((f) => f.id === selected && f.type === 'slider')}>設定 Slider Anchor</button>
         <Link to="/">回表單</Link>
+        </>)}
       </div>
 
       {assetError && <div className="error-banner">{assetError}</div>}
       {anchorMode && <div className="hint-banner">請在頁面上點一下設定 valueAnchor（0..1）</div>}
 
       {!assetError && (
-        <div className="canvas-wrap">
+        <div className="canvas-wrap workspace-canvas">
           <PdfCanvasPage pageNumber={page} pdfPath="/forms/cva.pdf" onViewport={setViewport} />
           <div
             ref={layerRef}

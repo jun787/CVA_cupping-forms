@@ -14,9 +14,10 @@ const toArrayBuffer = (u8: Uint8Array) =>
   u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
 
 export function FormPage() {
-  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [viewport, setViewport] = useState({ width: 0, height: 0, cssScale: 1 });
   const [fieldsFile, setFieldsFile] = useState<FieldsFile>(defaultFieldsFile);
   const [showSessions, setShowSessions] = useState(false);
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(() => localStorage.getItem('formToolbarCollapsed') === '1');
   const [assetError, setAssetError] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const store = useFormStore();
@@ -76,8 +77,14 @@ export function FormPage() {
   };
 
   return (
-    <div className="app-shell">
-      <div className="topbar">
+    <div className="app-shell page-shell">
+      <div className={`topbar ${toolbarCollapsed ? 'collapsed' : ''}`}>
+        <button onClick={() => {
+          const next = !toolbarCollapsed;
+          setToolbarCollapsed(next);
+          localStorage.setItem('formToolbarCollapsed', next ? '1' : '0');
+        }}>{toolbarCollapsed ? '▾' : '▴'}</button>
+        {!toolbarCollapsed && (<>
         <select value={store.currentPage} onChange={(e) => store.setCurrentPage(Number(e.target.value))}>
           {Object.entries(pageNames).map(([num, name]) => (
             <option key={num} value={num}>{name}</option>
@@ -86,6 +93,7 @@ export function FormPage() {
         <button onClick={() => setShowSessions((v) => !v)}>Sessions</button>
         <button onClick={doExport} disabled={!!assetError}>匯出 PDF</button>
         <Link to="/mapper">/mapper</Link>
+        </>)}
       </div>
 
       {assetError && <div className="error-banner">{assetError}</div>}
@@ -108,7 +116,7 @@ export function FormPage() {
       )}
 
       {!assetError && (
-        <div className="canvas-wrap">
+        <div className="canvas-wrap workspace-canvas">
           <PdfCanvasPage pageNumber={store.currentPage} pdfPath="/forms/cva.pdf" onViewport={setViewport} onError={setRenderError} />
           {currentSession && viewport.width > 0 && (
             <FieldLayer

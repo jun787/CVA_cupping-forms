@@ -9,6 +9,7 @@ export type FieldDef = {
   type: FieldType;
   rect: Rect01;
   fontSize?: number;
+  fontSizePt?: number;
   maxLines?: number;
   hitPadding?: number;
   valueAnchor?: Point01;

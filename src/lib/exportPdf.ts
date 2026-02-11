@@ -75,7 +75,7 @@ export const exportPdf = async (
       }
       if (field.type === 'text' && typeof value === 'string' && value.trim()) {
         const rect = rect01ToPdf(field.rect, png.width, png.height);
-        const fontSize = field.fontSize ?? 10;
+        const fontSize = field.fontSizePt ?? field.fontSize ?? 10;
         const lines = wrapTextWithEllipsis(value, font, fontSize, rect.width, field.maxLines ?? 4);
         const lineHeight = fontSize * 1.2;
         lines.forEach((line, index) => {

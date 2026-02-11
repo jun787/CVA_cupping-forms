@@ -8,8 +8,11 @@
 body { margin: 0; background: #f3f4f6; color: #111827; }
 button, select, input, textarea { font: inherit; }
 .app-shell { padding: 8px; }
-.topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 8px; display: flex; gap: 8px; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.page-shell { display: flex; flex-direction: column; height: 100vh; }
+.topbar { position: sticky; top: 0; z-index: 20; background: white; padding: 8px; display: flex; gap: 8px; align-items:center; flex-wrap: wrap; min-height: clamp(44px, 7vh, 72px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.topbar.collapsed { min-height: 36px; }
 .canvas-wrap { position: relative; margin: 12px auto; width: fit-content; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.workspace-canvas { flex: 1; overflow: auto; width: 100%; max-width: 100%; margin: 8px 0 0; }
 .field-layer { position: absolute; inset: 0; }
 .field-box { position: absolute; }
 .mapper-field { border: 1px solid #2563eb; background: rgba(37,99,235,0.1); }

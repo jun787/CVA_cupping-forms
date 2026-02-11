@@ -4,12 +4,12 @@ import { getDocument } from '../lib/pdfjs';
 type Props = {
   pageNumber: number;
   pdfPath: string;
-  onViewport?: (size: { width: number; height: number }) => void;
+  onViewport?: (size: { width: number; height: number; cssScale: number }) => void;
   onError?: (message: string) => void;
 };
 
 const MAX_DPR = 3;
-const MAX_CANVAS_PIXELS = 16_000_000;
+const MAX_CANVAS_PIXELS = 25_000_000;
 
 export function PdfCanvasPage({ pageNumber, pdfPath, onViewport, onError }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,7 +55,8 @@ export function PdfCanvasPage({ pageNumber, pdfPath, onViewport, onError }: Prop
 
             const base = page.getViewport({ scale: 1 });
             const container = canvas.parentElement;
-            const containerWidth = container?.clientWidth || Math.min(window.innerWidth - 24, base.width);
+            const containerWidth = container?.clientWidth ?? 0;
+            if (containerWidth <= 0) return;
             const cssScale = containerWidth / base.width;
             const cssW = base.width * cssScale;
             const cssH = base.height * cssScale;
@@ -81,7 +82,7 @@ export function PdfCanvasPage({ pageNumber, pdfPath, onViewport, onError }: Prop
             try {
               await renderTask.promise;
               if (!mounted || token !== renderTokenRef.current) return;
-              onViewport?.({ width: cssW, height: cssH });
+              onViewport?.({ width: cssW, height: cssH, cssScale });
             } catch (error) {
               if (!mounted || token !== renderTokenRef.current) return;
               const message = error instanceof Error ? error.message : 'PDF 渲染失敗';
