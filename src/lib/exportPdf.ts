@@ -6,8 +6,7 @@ import { point01ToPdf, rect01ToPdf } from './coords';
 import { wrapTextWithEllipsis } from './textWrap';
 import type { FieldDef, FieldValues } from './schema';
 
-const renderPageToPngBytes = async (pdf: any, pageNumber: number, scale = 2.2): Promise<Uint8Array> => {
-  const page = await pdf.getPage(pageNumber);
+const renderPageToPngBytes = async (page: any, scale = 2.2): Promise<Uint8Array> => {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(viewport.width);
@@ -46,20 +45,26 @@ export const exportPdf = async (
   const font = await doc.embedFont(fontBytes, { subset: true });
 
   for (const pageNo of filledPages) {
-    const pngBytes = await renderPageToPngBytes(srcPdf, pageNo);
+    const page = await srcPdf.getPage(pageNo);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const pageW = baseViewport.width;
+    const pageH = baseViewport.height;
+
+    const pngBytes = await renderPageToPngBytes(page);
     const png = await doc.embedPng(pngBytes);
-    const pdfPage = doc.addPage([png.width, png.height]);
-    pdfPage.drawImage(png, { x: 0, y: 0, width: png.width, height: png.height });
+    const pdfPage = doc.addPage([pageW, pageH]);
+    pdfPage.drawImage(png, { x: 0, y: 0, width: pageW, height: pageH });
 
     fields.filter((f) => f.page === pageNo).forEach((field) => {
       const value = session.values[field.id];
       if (field.type === 'checkbox') {
         if (value === true) {
-          const rect = rect01ToPdf(field.rect, png.width, png.height);
+          const rect = rect01ToPdf(field.rect, pageW, pageH);
+          const checkSize = Math.max(9, Math.min(rect.height, rect.width) * 0.95);
           pdfPage.drawText('✓', {
             x: rect.x + 1,
-            y: rect.y + 1,
-            size: field.fontSize ?? 11,
+            y: rect.y + Math.max(0, (rect.height - checkSize) / 2),
+            size: checkSize,
             font,
             color: rgb(0, 0, 0)
           });
@@ -68,21 +73,22 @@ export const exportPdf = async (
       }
       if (field.type === 'slider') {
         if (typeof value === 'number' && field.valueAnchor) {
-          const p = point01ToPdf(field.valueAnchor, png.width, png.height);
+          const p = point01ToPdf(field.valueAnchor, pageW, pageH);
           pdfPage.drawText(String(value), { x: p.x, y: p.y, size: field.fontSize ?? 10, font, color: rgb(0, 0, 0) });
         }
         return;
       }
       if (field.type === 'text' && typeof value === 'string' && value.trim()) {
-        const rect = rect01ToPdf(field.rect, png.width, png.height);
-        const fontSize = field.fontSizePt ?? field.fontSize ?? 10;
-        const lines = wrapTextWithEllipsis(value, font, fontSize, rect.width, field.maxLines ?? 4);
-        const lineHeight = fontSize * 1.2;
-        lines.forEach((line, index) => {
-          const y = rect.y + rect.height - lineHeight * (index + 1);
-          if (y >= rect.y) {
-            pdfPage.drawText(line, { x: rect.x, y, size: fontSize, font, color: rgb(0, 0, 0) });
-          }
+        const rect = rect01ToPdf(field.rect, pageW, pageH);
+        const fontSizePt = field.fontSizePt ?? field.fontSize ?? 10;
+        const lineHeightPt = fontSizePt * 1.2;
+        const paddingPt = 2;
+        const lines = wrapTextWithEllipsis(value, font, fontSizePt, Math.max(0, rect.width - paddingPt * 2), field.maxLines ?? 4);
+        const blockHeightPt = lines.length * lineHeightPt;
+        let y = rect.y + Math.max(0, (rect.height - blockHeightPt) / 2) + blockHeightPt - lineHeightPt + fontSizePt * 0.1;
+        lines.forEach((line) => {
+          pdfPage.drawText(line, { x: rect.x + paddingPt, y, size: fontSizePt, font, color: rgb(0, 0, 0) });
+          y -= lineHeightPt;
         });
       }
     });

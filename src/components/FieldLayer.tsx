@@ -36,7 +36,17 @@ export function FieldLayer({ fields, page, viewport, values, onUpdate }: Props) 
         }
         const fontSizePt = field.fontSizePt ?? field.fontSize ?? 10;
         const fontSizePx = fontSizePt * (viewport.cssScale ?? 1);
-        return <TextField key={field.id} style={baseStyle} fontSizePx={fontSizePx} value={typeof value === 'string' ? value : ''} onChange={(v) => onUpdate(field.id, v)} />;
+        return (
+          <TextField
+            key={field.id}
+            fieldId={field.id}
+            style={baseStyle}
+            fontSizePx={fontSizePx}
+            maxLines={field.maxLines ?? 4}
+            value={typeof value === 'string' ? value : ''}
+            onChange={(v) => onUpdate(field.id, v)}
+          />
+        );
       })}
     </div>
   );
