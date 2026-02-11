@@ -12,29 +12,24 @@ export function CheckboxField({ style, checked, hitPadding, onToggle }: Props) {
   const top = Number(style.top ?? 0);
   const width = Number(style.width ?? 0);
   const height = Number(style.height ?? 0);
-  const fontSizePx = Math.max(10, Math.floor(height * 0.9));
 
   return (
-    <div
-      role="checkbox"
-      aria-checked={checked}
-      tabIndex={0}
+    <button
+      type="button"
+      aria-pressed={checked}
       style={{
         position: 'absolute',
         left: left - hitPadding,
         top: top - hitPadding,
         width: width + hitPadding * 2,
         height: height + hitPadding * 2,
+        border: 'none',
         background: 'transparent',
+        padding: 0,
+        margin: 0,
         cursor: 'pointer'
       }}
       onClick={onToggle}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onToggle();
-        }
-      }}
     >
       <div
         style={{
@@ -43,17 +38,17 @@ export function CheckboxField({ style, checked, hitPadding, onToggle }: Props) {
           top: hitPadding,
           width,
           height,
+          border: '1px solid #111',
+          background: 'transparent',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          lineHeight: 1,
+          fontSize: Math.max(10, Math.min(height, width) * 0.95)
         }}
       >
-        {checked && (
-          <span style={{ pointerEvents: 'none', fontSize: fontSizePx, fontWeight: 700, lineHeight: 1 }}>
-            ✓
-          </span>
-        )}
+        {checked ? '✓' : ''}
       </div>
-    </div>
+    </button>
   );
 }
